@@ -5,7 +5,7 @@ namespace restaurantAPI.Models
 {
     public class CreateRestaurantDto
     {
-       
+        [MaxLength(25)]
         public string Name { get; set; }
 
         public string? Description { get; set; }
@@ -20,6 +20,7 @@ namespace restaurantAPI.Models
         public string City { get; set; }
 
         public string Street { get; set; }
+
         public string PostalCode { get; set; }
         
         //public virtual Address Address { get; set; }

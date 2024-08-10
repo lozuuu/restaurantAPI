@@ -5,6 +5,8 @@ using restaurantAPI.Services;
 using System.Reflection;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using NLog.Web;
+using restaurantAPI.Middleware;
+using Microsoft.OpenApi.Models;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,7 +18,7 @@ builder.Host.UseNLog();
 // Add services to the container.
 builder.Services.AddDbContext<RestaurantDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-Console.WriteLine("dupa)");
+
 
 
 builder.Services.AddControllers();
@@ -27,9 +29,18 @@ builder.Services.AddDbContext<RestaurantDbContext>(options =>
 builder.Services.AddScoped<RestaurantSeeder>();
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 builder.Services.AddScoped<IRestaurantService, RestaurantService>();
+builder.Services.AddScoped<ErrorHandlingMiddleware>();
+builder.Services.AddSwaggerGen();
+builder.Services.AddScoped<RequestTimeMiddleware>();
+builder.Services.AddScoped<IDishService, DishService>();
+
+
+
 
 
 var app = builder.Build();
+
+
 
 //var scope = app.Services.CreateScope();
 //var seeder = scope.ServiceProvider.GetRequiredService<RestaurantSeeder>(); 
@@ -51,7 +62,20 @@ using (var scope = app.Services.CreateScope())
 
 // Configure the HTTP request pipeline.
 //seeder.Seed();
+app.UseMiddleware<ErrorHandlingMiddleware>();
+app.UseMiddleware<RequestTimeMiddleware>();
+
 app.UseHttpsRedirection();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    });
+}
+
 
 app.UseAuthorization();
 
